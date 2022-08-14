@@ -1,0 +1,121 @@
+---
+- name: Creating New User in PAM and assigning required groups
+  hosts: localhost
+  tasks:
+
+    - name: create user groups
+      uri:
+        url: https://Wallix_host_name/api/usergroups
+        validate_certs: no
+        force_basic_auth: yes
+        status_code: 204
+        user: "{{ pam_user }}"
+        password: "{{ pam_password }}"
+        method: POST
+        body_format: json
+        body:
+          group_name: "{{item.var_firstname}}_{{item.var_surname}}_UG"
+          description: ""
+          timeframes:
+            -  allthetime
+          restrictions:
+            - action: kill
+              rules: command
+              subprotocol: "SSH_SHELL_SESSION"
+      with_items: 
+        - "{{user_details}}"
+
+    - name: create user account
+      uri:
+        url: https://Wallix_host_name/api/users
+        validate_certs: no
+        force_basic_auth: yes
+        status_code: 204
+        user: "{{ pam_user }}"
+        password: "{{ pam_password }}"
+        method: POST
+        body_format: json
+        body:
+          user_name: "{{item.user_name}}"
+          display_name: "{{item.var_firstname}} {{item.var_surname}}"
+          email: "{{item.user_name}}@{{domain_name}}"
+          preferred_language: en
+          profile: user
+          groups:
+            - "{{item.var_firstname}}_{{item.var_surname}}_UG"
+          user_auths:
+            - Duo_Radius
+      with_items: 
+        - "{{user_details}}"
+
+    - name: Create Target Groups
+      uri:
+        url: https://wallix_host_name/api/targetgroups
+        validate_certs: no
+        force_basic_auth: yes
+        status_code: 204
+        user: "{{ pam_user }}"
+        password: "{{ pam_password }}"
+        method: POST
+        body_format: json
+        body:
+          group_name: "{{item.var_firstname}}_{{item.var_surname}}_DG"
+          description: ""
+      with_items: 
+        - "{{user_details}}"
+
+    - name: Create Access Groups
+      uri:
+        url: https://wallix_host_name/api/authorizations
+        validate_certs: no
+        force_basic_auth: yes
+        status_code: 204
+        user: "{{ pam_user }}"
+        password: "{{ pam_password }}"
+        method: POST
+        body_format: json
+        body:
+          user_group: "{{item.var_firstname}}_{{item.var_surname}}_UG"
+          target_group: "{{item.var_firstname}}_{{item.var_surname}}_DG"
+          authorization_name: "{{item.var_firstname}}_{{item.var_surname}}_AG"
+          description: ""
+          subprotocols:
+            - SSH_SHELL_SESSION
+            - SSH_REMOTE_COMMAND
+            - SSH_SCP_UP
+            - SSH_SCP_DOWN
+            - SSH_X11
+            - SFTP_SESSION
+            - RDP
+            - VNC
+            - TELNET
+            - RLOGIN 
+            - SSH_DIRECT_TCPIP
+            - SSH_REVERSE_TCPIP
+            - SSH_AUTH_AGENT
+            - RAWTCPIP
+            - RDP_CLIPBOARD_UP
+            - RDP_CLIPBOARD_DOWN
+            - RDP_PRINTER
+            - RDP_COM_PORT
+            - RDP_DRIVE
+            - RDP_SMARTCARD
+            - RDP_CLIPBOARD_FILE
+            - RDP_AUDIO_OUTPUT
+          is_critical: false
+          is_recorded: true
+          authorize_password_retrieval: true 
+          authorize_sessions: true
+          approval_required: false
+          #has_comment: false
+          #mandatory_comment: false
+          #has_ticket: false
+          #mandatory_ticket: false
+          #approvers: []
+          #active_quorum: -1
+          #inactive_quorum: -1
+          #single_connection: false
+          #approval_timeout: 0
+      with_items: 
+        - "{{user_details}}"
+    

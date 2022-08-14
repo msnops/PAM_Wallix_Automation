@@ -1,0 +1,11 @@
+- name: convert csv to json
+  hosts: localhost
+  tasks:
+    - name: call python script script and get the date and authoraization code
+      script: xcel_to_json.py
+      args:
+        executable: python3
+      register: date_auth
+    - name: debug the above variable
+      debug:
+        var: date_auth.stdout

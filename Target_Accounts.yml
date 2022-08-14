@@ -1,0 +1,31 @@
+---
+- name: Adding Target Accounts on PAM
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - name: create an Target Account on PAM
+      uri:
+        url: https://wallix_server_name/api/domains/domain_name/accounts
+        validate_certs: no
+        force_basic_auth: yes
+        status_code: 204
+        user: "{{ pam_user }}"
+        password: "{{ pam_password }}"
+        method: POST
+        body_format: json
+        body:
+          account_name: "{{item.Target_User_name}}"
+          account_login: "{{item.Target_User_name}}"
+          description: ""
+          credentials:
+            - type: "password"
+              password: "{{item.Target_User_Pass}}"
+            
+          checkout_policy: "default"
+          auto_change_password: false
+          auto_change_ssh_key: false
+      with_items: 
+        - "{{target_details}}"
+      when: target_details is defined
+

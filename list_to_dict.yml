@@ -1,0 +1,12 @@
+---
+- name: Adding Target Accounts on PAM
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - name: conver list or dict
+      set_fact:
+        Targets_To_Add: "{{ Targets_To_Add | default([]) + [dict(Var_Target_Group=item[0].var_TG, Var_account=item[0].account)] }}"
+      loop: "{{ Groups_to_be_Added }}"
+    - debug:
+        var: Targets_To_Add

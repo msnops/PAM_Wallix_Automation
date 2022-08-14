@@ -1,0 +1,41 @@
+---
+- name: Adding Target Accounts on PAM
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - name: create an Target Account on PAM
+      uri:
+        url: https://wallix_host_name/api/devices
+        validate_certs: no
+        force_basic_auth: yes
+        status_code: 204
+        user: "{{ pam_user }}"
+        password: "{{ pam_password }}"
+        method: POST
+        body_format: json
+        body:
+          device_name: "{{ item.vm_name }}"
+          description: "{{ item.vm_notes }} - {{ item.vm_ip }}"
+          alias: "{{ item.vm_name }}"
+          host: "{{ item.vm_ip }}"
+          services:
+          - service_name: RDP
+            protocol: RDP
+            port: 3389
+            subprotocols:
+            - RDP_CLIPBOARD_UP
+            - RDP_CLIPBOARD_DOWN
+            - RDP_PRINTER
+            - RDP_COM_PORT
+            - RDP_DRIVE
+            - RDP_SMARTCARD
+            - RDP_CLIPBOARD_FILE
+            - RDP_AUDIO_OUTPUT
+            - RDP_AUDIO_INPUT
+            connection_policy: RDP
+            global_domains:
+            - "{{domain_name}}"
+      with_items: "{{ vmdetails }}"
+
+
